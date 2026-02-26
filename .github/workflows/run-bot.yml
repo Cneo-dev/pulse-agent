@@ -1,27 +1,35 @@
 name: Run Telegram Bot
 
+# Триггеры workflow
 on:
-  workflow_dispatch: # позволяет запускать вручную
+  workflow_dispatch:       # ручной запуск
+  schedule:               # автозапуск по расписанию
+    - cron: '0 * * * *'   # каждый час в UTC
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+
     steps:
+      # 1️⃣ Клонируем репозиторий
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Настраиваем Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
+      # 3️⃣ Устанавливаем зависимости
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run bot
+      # 4️⃣ Запускаем бота
+      - name: Run Telegram Bot
+        run: python bot.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python bot.py

@@ -5,15 +5,20 @@ from telegram import Bot
 # =======================
 # Настройки бота
 # =======================
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")  # берём из secrets GitHub
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")      # свой Telegram ID или группы
+# Берем токен и чат ID из секретов GitHub Actions
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
+CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+
+if not TELEGRAM_TOKEN or not CHAT_ID:
+    print("❌ Ошибка: TELEGRAM_TOKEN или TELEGRAM_CHAT_ID не заданы!")
+    exit(1)
 
 bot = Bot(token=TELEGRAM_TOKEN)
+print(f"✅ Telegram бот инициализирован для chat_id={CHAT_ID}")
 
 # =======================
 # Список токенов для мониторинга
 # =======================
-# Формат: {"имя_токена": "ссылка на Dexscreener"}
 TOKENS = {
     "pDAI": "https://dexscreener.com/pulsechain/0xfc64556faa683e6087f425819c7ca3c558e13ac1",
     "TOM/WPLS": "https://dexscreener.com/pulsechain/0xe45f18acce05af14a16cec2d8edf6ae6950175b3",
@@ -32,20 +37,23 @@ TOKENS = {
 # Функция отправки сообщений
 # =======================
 def send_message(text):
-    bot.send_message(chat_id=CHAT_ID, text=text)
+    try:
+        bot.send_message(chat_id=CHAT_ID, text=text)
+        print(f"✅ Сообщение отправлено: {text}")
+    except Exception as e:
+        print(f"❌ Ошибка при отправке сообщения: {e}")
 
 # =======================
 # Функция проверки токенов
 # =======================
 def check_tokens():
     for name, url in TOKENS.items():
-        # простой пример: проверка доступности страницы
         try:
             r = requests.get(url, timeout=10)
             if r.status_code == 200:
                 send_message(f"✅ {name} доступен на Dexscreener: {url}")
             else:
-                send_message(f"⚠️ {name} недоступен: {r.status_code}")
+                send_message(f"⚠️ {name} недоступен: HTTP {r.status_code}")
         except Exception as e:
             send_message(f"❌ Ошибка {name}: {e}")
 
@@ -53,4 +61,6 @@ def check_tokens():
 # Точка входа
 # =======================
 if __name__ == "__main__":
+    print("Запуск проверки токенов...")
     check_tokens()
+    print("Проверка завершена.")
